@@ -212,7 +212,7 @@ export default function CardsPosts({ userPosts, id }) {
                 color="warning"
                 variant="shadow"
                 type="submit"
-                className="w-1/4 self-center"
+                className="w-1/2 self-center"
                 isLoading={isPending}
               >
                 Update Your Post
