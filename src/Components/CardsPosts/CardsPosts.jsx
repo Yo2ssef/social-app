@@ -54,7 +54,7 @@ export default function CardsPosts({ userPosts, id }) {
   });
 
   // API: Update Post
-  function sendUpdatePost(data, postId) {
+  function sendUpdatePost({data, postId}) {
     const myFormData = new FormData();
     if (data.body.trim() !== "") {
       myFormData.append("body", data.body);
@@ -317,7 +317,8 @@ export default function CardsPosts({ userPosts, id }) {
                   className="w-full"
                   classNames={{
                     inputWrapper:
-                      "bg-gray-100 hover:bg-gray-200/80 focus-within:bg-white transition-all shadow-none",
+                      "bg-gray-100 dark:bg-slate-800 hover:bg-gray-200/80 dark:hover:bg-slate-700/80 focus-within:bg-white dark:focus-within:bg-slate-700 transition-all shadow-none",
+                    input: "dark:text-slate-100",
                   }}
                 />
                 <CloseCircle
@@ -330,7 +331,7 @@ export default function CardsPosts({ userPosts, id }) {
               </div>
               <Button
                 type="submit"
-                className="w-[90%] mx-auto mt-4 font-semibold bg-[#1877f2] text-white rounded-xl"
+                className="w-[98%] mx-auto my-4 font-semibold bg-[#1877f2] text-white rounded-xl"
                 isLoading={isPending}
               >
                 Update Your Post

@@ -66,6 +66,7 @@ export default function CommentsCard({ detComment }) {
       toast.success(data.message);
       reset();
       setupdateComment(false);
+      queryClient.invalidateQueries({ queryKey: ["allPosts"] });
       queryClient.invalidateQueries({ queryKey: ["allComments", idPost] });
       queryClient.invalidateQueries({ queryKey: ["singlePost", idPost] });
     },
