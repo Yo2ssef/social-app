@@ -1,40 +1,40 @@
 import { Button, Form, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { ArrowLeft } from "iconsax-reactjs";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
 import * as zod from "zod";
+import { ArrowLeft } from "iconsax-reactjs";
 
+// Validation Schema
 const schema = zod
   .object({
     password: zod
       .string()
       .regex(
         /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/,
-        "Enter Vaild Password",
+        "Enter Valid Password",
       ),
     newPassword: zod
       .string()
       .regex(
         /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/,
-        "Enter Vaild Password",
+        "Enter Valid Password",
       ),
   })
-  .refine(
-    function ({ password, newPassword }) {
-      if (password !== newPassword) {
-        return true;
-      }
-      return false;
-    },
-    { error: "Password and New Password same", path: ["newPassword"] },
-  );
+  .refine(({ password, newPassword }) => password !== newPassword, {
+    message: "New password must be different from current password",
+    path: ["newPassword"],
+  });
+
 export default function ChangePassword() {
+  // Hooks & States
   const myNavigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Form Configuration
   const {
     handleSubmit,
     register,
@@ -47,14 +47,15 @@ export default function ChangePassword() {
     mode: "all",
     resolver: zodResolver(schema),
   });
-  async function sendUserData(x) {
-    setIsLoading(true);
 
+  // API: Change Password logic
+  async function sendUserData(formData) {
+    setIsLoading(true);
     try {
       await toast.promise(
         axios.patch(
           `${import.meta.env.VITE_BASE_URL}/users/change-password`,
-          x,
+          formData,
           {
             headers: {
               token: localStorage.getItem("token"),
@@ -62,8 +63,12 @@ export default function ChangePassword() {
           },
         ),
         {
-          loading: <p className="font-medium text-gray-400">Updating...</p>,
-          success: function (response) {
+          loading: (
+            <p className="font-medium text-gray-400 dark:text-slate-500">
+              Updating...
+            </p>
+          ),
+          success: (response) => {
             const newToken = response?.data?.data?.token;
             localStorage.setItem("token", newToken);
             myNavigate("/posts");
@@ -73,17 +78,15 @@ export default function ChangePassword() {
               </p>
             );
           },
-          error: function (err) {
-            return (
-              <p className="text-red-500 font-medium">
-                {err.response?.data?.message || "Update Failed"}
-              </p>
-            );
-          },
+          error: (err) => (
+            <p className="text-red-500 font-medium">
+              {err.response?.data?.message || "Update Failed"}
+            </p>
+          ),
         },
       );
     } catch (err) {
-      console.error(err);
+      console.error("Change Password Error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -91,49 +94,89 @@ export default function ChangePassword() {
 
   return (
     <>
-      <Link className="ms-7 flex items-center  gap-1" to="/posts">
-        <ArrowLeft size="44" color="#2ccce4" />
-        <span className="font-semibold">Back to posts</span>
-      </Link>
+      <title>Change Password</title>
+
+      {/* Navigation: Back Button */}
+      <div className="container mx-auto lg:px-96 md:px-33 px-4">
+        <Link
+          className="my-6 inline-flex items-center gap-2 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/60 dark:border-slate-700/60 shadow-sm hover:shadow-md hover:bg-white/90 dark:hover:bg-slate-800/90 px-5 py-2.5 rounded-full transition-all w-fit group"
+          to="/posts"
+        >
+          <ArrowLeft
+            size="24"
+            className="text-[#1877f2] group-hover:-translate-x-1 transition-transform"
+            variant="TwoTone"
+          />
+          <span className="font-bold text-gray-700 dark:text-slate-200 text-sm tracking-wide">
+            Back to posts
+          </span>
+        </Link>
+      </div>
+
+      {/* Change Password Form */}
       <Form
         onSubmit={handleSubmit(sendUserData)}
-        className="my-10 w-full max-w-lg flex justify-center items-center flex-col gap-4 bg-white border border-gray-400/60 shadow-2xl mx-auto mt-8 p-6 rounded-3xl"
+        className="my-10 w-full max-w-125 flex justify-center items-center flex-col gap-5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 shadow-2xl shadow-blue-500/5 mx-auto mt-8 p-8 rounded-[2.5rem]"
       >
+        {/* Header */}
+        <div className="text-center mb-2 w-full">
+          <h2 className="text-gray-800 dark:text-slate-100 font-extrabold text-3xl tracking-tight mb-2 drop-shadow-sm">
+            Change Password
+          </h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm font-medium">
+            Keep your account secure
+          </p>
+        </div>
+
+        {/* Current Password Input */}
         <Input
           {...register("password")}
           isInvalid={!!errors.password}
           errorMessage={errors.password?.message}
-          label="Password"
+          label="Current Password"
           labelPlacement="inside"
-          autoComplete="new-password"
+          autoComplete="current-password"
           placeholder="Enter your password"
           type="password"
+          variant="flat"
+          size="lg"
           classNames={{
-            inputWrapper: "bg-cyan-500/10",
-            label: errors.password ? "text-red-600!" : "text-cyan-600!",
+            inputWrapper:
+              "bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all shadow-sm border border-gray-200/50 dark:border-slate-700/50 rounded-2xl",
+            label: errors.password
+              ? "text-red-500 font-semibold"
+              : "text-gray-600 dark:text-slate-300 font-semibold",
           }}
         />
+
+        {/* New Password Input */}
         <Input
           {...register("newPassword")}
           isInvalid={!!errors.newPassword}
           errorMessage={errors.newPassword?.message}
-          label="Your New Password"
+          label="New Password"
           labelPlacement="inside"
           autoComplete="new-password"
           placeholder="Enter Your New Password"
           type="password"
+          variant="flat"
+          size="lg"
           classNames={{
-            inputWrapper: "bg-cyan-500/10",
-            label: errors.newPassword ? "text-red-600!" : "text-cyan-600!",
+            inputWrapper:
+              "bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all shadow-sm border border-gray-200/50 dark:border-slate-700/50 rounded-2xl",
+            label: errors.newPassword
+              ? "text-red-500 font-semibold"
+              : "text-gray-600 dark:text-slate-300 font-semibold",
           }}
         />
+
+        {/* Submit Button */}
         <Button
-          color="primary"
           type="submit"
           isLoading={isLoading}
-          className="w-1/2"
+          className="w-full mt-2 font-bold bg-[#1877f2] hover:bg-[#166fe5] shadow-lg shadow-blue-500/30 text-white rounded-2xl text-[16px] py-6"
         >
-          Submit
+          Update Password
         </Button>
       </Form>
     </>

@@ -1,33 +1,38 @@
 import axios from "axios";
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 
 export const AuthUserContext = createContext();
 
 export default function AuthContext({ children }) {
-  const [userData, setUserData] = useState(function () {
-    return getUserData();
-  });
+  const [userData, setUserData] = useState(null);
 
   async function getUserData() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     try {
-      const {
-        data: { data: user },
-      } = await axios.get(
+      const { data } = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/users/profile-data`,
         {
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-        },
+          headers: { token },
+        }
       );
-      setUserData(user);
-      return user;
+      setUserData(data.data);
     } catch (error) {
+      console.log("Auth Error:", error);
       setUserData(null);
-      return null && console.log(error);
     }
   }
+
+  useEffect(() => {
+    getUserData();
+  }, []); 
+
   const tokenUp = { userData, setUserData, getUserData };
 
-  return <AuthUserContext value={tokenUp}>{children}</AuthUserContext>;
+  return (
+    <AuthUserContext.Provider value={tokenUp}>
+      {children}
+    </AuthUserContext.Provider>
+  );
 }

@@ -6,9 +6,9 @@ export default function Layout() {
   return (
     <>
       <ScrollToTop />
-      <main>
+      <main className="min-h-screen pb-3">
         <AppNavbar />
-        <section className="min-h-screen bg-stone-300 overflow-auto">
+        <section className="min-h-screen">
           <Outlet />
         </section>
       </main>

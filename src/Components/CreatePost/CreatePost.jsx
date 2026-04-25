@@ -10,33 +10,39 @@ import {
   Input,
 } from "@heroui/react";
 import { useContext, useRef, useState } from "react";
-import { AuthUserContext } from "../../Context/AuthContext/AuthContext";
-import { DocumentUpload } from "iconsax-reactjs";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import CardsPosts from "../CardsPosts/CardsPosts";
+import { DocumentUpload } from "iconsax-reactjs";
+import { AuthUserContext } from "../../Context/AuthContext/AuthContext";
 
 export default function CreatePost() {
+  // Hooks & Local States
   const [uploadImageUser, setUploadImageUser] = useState(null);
   const [image, setImage] = useState(null);
-  // const [idPostUser, setIdPostUser] = useState(null);
   const imageUpload = useRef();
+  const queryClient = useQueryClient();
+
+  // Context Data
   const { userData } = useContext(AuthUserContext) || {};
   const name = userData?.user?.name;
   const photo = userData?.user?.photo;
+
+  // Form Configuration
   const { handleSubmit, register, reset } = useForm({
-    defaultValues: {
-      body: "",
-    },
+    defaultValues: { body: "" },
   });
 
+  // Handle Image Selection Preview
   function handleImageUpload(e) {
-    setImage(e.target.files[0]);
-    setUploadImageUser(URL.createObjectURL(e.target.files[0]));
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+      setUploadImageUser(URL.createObjectURL(e.target.files[0]));
+    }
   }
 
+  // API Post Function
   function sendPost(data) {
     const myFormData = new FormData();
     if (data.body.trim() !== "") {
@@ -45,90 +51,108 @@ export default function CreatePost() {
     if (image) {
       myFormData.append("image", image);
     }
+
     return axios.post(`${import.meta.env.VITE_BASE_URL}/posts`, myFormData, {
-      headers: {
-        token: localStorage.getItem("token"),
-      },
+      headers: { token: localStorage.getItem("token") },
     });
   }
-  const queryClient = useQueryClient();
 
+  // Mutation Logic
   const { mutate, isPending } = useMutation({
     mutationFn: sendPost,
-    onSuccess: function ({ data }) {
-      toast.success(data.message);
+    onSuccess: ({ data }) => {
+      toast.success(data?.message);
       reset();
       setUploadImageUser(null);
+      setImage(null);
       queryClient.invalidateQueries({ queryKey: ["allPosts"] });
     },
-    onError: function (err) {
+    onError: (err) => {
       toast.error(err.message || "Failed to Create Post");
     },
   });
+
   return (
     <>
-      <Card className="w-5/6 lg:w-2/4 mx-auto mt-5 bg-white">
-        <CardHeader className="flex gap-3 ">
-          <h2 className="font-semibold text-medium text-cyan-700">
-            Hello {name}
-            Create Post...
+      <Card className="w-[95%] lg:w-170 mx-auto mt-8 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl shadow-lg border border-white/60 dark:border-slate-700/60 rounded-3xl overflow-visible">
+        {/* Card Title */}
+        <CardHeader className="flex gap-3 px-6 pt-6 pb-2">
+          <h2 className="font-bold text-gray-800 dark:text-slate-200 text-xl tracking-tight">
+            Create Post
           </h2>
         </CardHeader>
-        <Divider />
-        <CardBody>
+
+        <Divider className="my-2 opacity-50" />
+
+        <CardBody className="pt-2 px-6">
           <Form className="w-full" onSubmit={handleSubmit(mutate)}>
-            <div className="flex justify-between gap-1.5 items-center w-full">
+            <div className="flex gap-4 items-center w-full">
+              {/* User Avatar */}
               <Image
-                className="bg-gray-400 rounded-full w-fit"
+                className="bg-gray-200 dark:bg-slate-700 rounded-full object-cover shrink-0 shadow-sm"
                 alt={name}
-                height={40}
-                radius="sm"
+                height={48}
+                radius="full"
                 src={photo}
-                width={40}
+                width={48}
               />
 
+              {/* Text Input Field */}
               <Input
                 {...register("body")}
-                label="What in your mind"
+                placeholder={`What's on your mind, ${name ? name.split(" ")[0] : "User"}?`}
                 type="text"
-                variant="bordered"
-                className="w-full"
-              />
-
-              <DocumentUpload
-                size="32"
-                className="text-blue-500 cursor-pointer"
-                onClick={() => {
-                  imageUpload.current.click();
+                radius="full"
+                variant="flat"
+                size="lg"
+                className="flex-1"
+                classNames={{
+                  inputWrapper: "bg-gray-100/50 dark:bg-slate-800/50 hover:bg-gray-200/80 dark:hover:bg-slate-700/80 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all shadow-inner",
                 }}
               />
+
+              {/* Image Upload Icon */}
+              <DocumentUpload
+                size="32"
+                variant="Bulk"
+                className="text-blue-500 cursor-pointer hover:scale-110 hover:-translate-y-1 transition-all shrink-0"
+                onClick={() => imageUpload.current.click()}
+              />
             </div>
-            <CardFooter className="flex justify-center items-center flex-col">
+
+            {/* Post Button */}
+            <CardFooter className="px-0 pt-5 pb-2 w-full">
               <Button
                 type="submit"
-                color="primary"
-                variant="ghost"
-                className="w-full"
+                className="w-full font-bold bg-[#1877f2] hover:bg-[#166fe5] shadow shadow-blue-500/30 text-white rounded-xl text-md"
                 isLoading={isPending}
               >
                 Post
               </Button>
             </CardFooter>
           </Form>
+
+          {/* Selected Image Preview Area */}
           {uploadImageUser && (
-            <img src={uploadImageUser} className="mt-3 w-full object-cover" />
+            <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700">
+              <img
+                src={uploadImageUser}
+                alt="preview"
+                className="w-full object-cover max-h-96"
+              />
+            </div>
           )}
         </CardBody>
-        <Divider />
 
+        {/* Hidden Input for Files */}
         <input
           type="file"
           className="hidden"
           onChange={handleImageUpload}
           ref={imageUpload}
+          accept="image/*"
         />
       </Card>
-      {/* <CardsPosts className='hidden' idPostUser={idPostUser} /> */}
     </>
   );
 }

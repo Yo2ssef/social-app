@@ -2,4 +2,14 @@
 @plugin './assets/hero.js';
 /* Note: You may need to change the path to fit your project structure */
 @source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-[#eef2f3] via-[#f4f7f6] to-[#e6e9ec] dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-inner text-[#1c1e21] dark:text-slate-200 antialiased selection:bg-cyan-500 selection:text-white min-h-screen relative;
+  }
+}
