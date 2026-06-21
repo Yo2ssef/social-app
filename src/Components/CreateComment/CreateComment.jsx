@@ -5,16 +5,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { AuthUserContext } from "../../Context/AuthContext/AuthContext";
-
+import * as zod from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 export default function CreateComment({ id }) {
   // Hooks & Context
   const queryClient = useQueryClient();
   const { userData } = useContext(AuthUserContext) || {};
   const { name, photo } = userData?.user || {};
-
+  const schema = zod.object({
+    content: zod.string().min(1, "Comment cannot be empty"),
+  });
   // Form Config
   const { handleSubmit, register, reset } = useForm({
     defaultValues: { content: "" },
+    mode: "all",
+    resolver: zodResolver(schema),
   });
 
   // API: Send Comment logic

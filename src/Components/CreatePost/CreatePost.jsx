@@ -16,7 +16,8 @@ import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DocumentUpload } from "iconsax-reactjs";
 import { AuthUserContext } from "../../Context/AuthContext/AuthContext";
-
+import * as zod from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 export default function CreatePost() {
   // Hooks & Local States
   const [uploadImageUser, setUploadImageUser] = useState(null);
@@ -28,10 +29,13 @@ export default function CreatePost() {
   const { userData } = useContext(AuthUserContext) || {};
   const name = userData?.user?.name;
   const photo = userData?.user?.photo;
-
+  const schema = zod.object({
+    body: zod.string().min(1, "Post content cannot be empty"),
+  });
   // Form Configuration
   const { handleSubmit, register, reset } = useForm({
     defaultValues: { body: "" },
+    resolver: zodResolver(schema),
   });
 
   // Handle Image Selection Preview
@@ -107,7 +111,8 @@ export default function CreatePost() {
                 size="lg"
                 className="flex-1"
                 classNames={{
-                  inputWrapper: "bg-gray-100/50 dark:bg-slate-800/50 hover:bg-gray-200/80 dark:hover:bg-slate-700/80 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all shadow-inner",
+                  inputWrapper:
+                    "bg-gray-100/50 dark:bg-slate-800/50 hover:bg-gray-200/80 dark:hover:bg-slate-700/80 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all shadow-inner",
                 }}
               />
 
